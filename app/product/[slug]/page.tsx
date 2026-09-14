@@ -1,0 +1,113 @@
+import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { getProductBySlug } from "../../../lib/queries";
+import { formatPrice } from "../../../lib/format";
+
+export const revalidate = 3600;
+
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    return { title: "Product not found" };
+  }
+
+  return {
+    title: product.name,
+    description: product.description.slice(0, 160),
+    openGraph: {
+      title: product.name,
+      description: product.description.slice(0, 160),
+      images: [product.images[0]],
+    },
+  };
+}
+
+export default async function ProductPage({ params }: Props) {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+
+  if (!product || !product.active) {
+    notFound();
+  }
+
+  const soldOut = product.stock === 0;
+  const lowStock = product.stock > 0 && product.stock <= 5;
+
+  return (
+    <div className="mx-auto max-w-6xl px-6 py-12">
+      <nav className="mb-8 text-sm text-neutral-500">
+        <Link href="/products" className="hover:text-neutral-900">
+          Shop
+        </Link>
+        <span className="mx-2">/</span>
+        <Link
+          href={`/category/${product.category.slug}`}
+          className="hover:text-neutral-900"
+        >
+          {product.category.name}
+        </Link>
+        <span className="mx-2">/</span>
+        <span className="text-neutral-900">{product.name}</span>
+      </nav>
+
+      <div className="grid gap-10 lg:grid-cols-2">
+        <div className="relative aspect-square overflow-hidden rounded-lg bg-neutral-100">
+          <Image
+            src={product.images[0]}
+            alt={product.name}
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            priority
+            className="object-cover"
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <p className="text-sm uppercase tracking-wide text-neutral-500">
+            {product.category.name}
+          </p>
+
+          <h1 className="mt-2 text-3xl font-bold tracking-tight">
+            {product.name}
+          </h1>
+
+          <p className="mt-4 text-2xl font-semibold">
+            {formatPrice(product.price)}
+          </p>
+
+          <p className="mt-6 leading-relaxed text-neutral-600">
+            {product.description}
+          </p>
+
+          <div className="mt-8">
+            {soldOut ? (
+              <button
+                disabled
+                className="w-full cursor-not-allowed rounded-lg bg-neutral-200 py-3 font-medium text-neutral-500"
+              >
+                Sold out
+              </button>
+            ) : (
+              <button className="w-full rounded-lg bg-neutral-900 py-3 font-medium text-white transition hover:bg-neutral-700">
+                Add to cart
+              </button>
+            )}
+
+            {lowStock && (
+              <p className="mt-3 text-sm text-orange-600">
+                Only {product.stock} left in stock
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
