@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useCart } from "../components/CartProvider";
 import { fetchCartProducts } from "./actions";
 import { formatPrice } from "../../lib/format";
+import CheckoutButton from "./CheckoutButton";
 
 type Product = {
   id: number;
@@ -126,13 +127,9 @@ export default function CartContent() {
           <span className="text-lg font-semibold">{formatPrice(total)}</span>
         </div>
 
-        <button className="mt-6 w-full rounded-lg bg-neutral-900 py-3 font-medium text-white transition hover:bg-neutral-700">
-          Checkout
-        </button>
-
-        <p className="mt-3 text-center text-sm text-neutral-500">
-          Checkout coming in the next milestone.
-        </p>
+        <div className="mt-6">
+          <CheckoutButton items={items} />
+        </div>
       </div>
     </div>
   );
