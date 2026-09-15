@@ -84,3 +84,14 @@ function getOrderBy(sort?: string) {
       return { createdAt: "desc" as const };
   }
 }
+
+export async function getProductsByIds(ids: number[]) {
+  if (ids.length === 0) return [];
+
+  return prisma.product.findMany({
+    where: {
+      id: { in: ids },
+      active: true,
+    },
+  });
+}

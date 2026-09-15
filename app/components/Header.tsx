@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CartLink from "./CartLink";
 
 export default function Header() {
   return (
@@ -18,6 +19,7 @@ export default function Header() {
           <Link href="/category/basketball" className="hover:text-neutral-600">
             Basketball
           </Link>
+          <CartLink />
         </nav>
       </div>
     </header>

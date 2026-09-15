@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getProductBySlug } from "../../../lib/queries";
 import { formatPrice } from "../../../lib/format";
+import AddToCartButton from "../../components/AddToCartButton";
 
 export const revalidate = 3600;
 
@@ -87,18 +88,7 @@ export default async function ProductPage({ params }: Props) {
           </p>
 
           <div className="mt-8">
-            {soldOut ? (
-              <button
-                disabled
-                className="w-full cursor-not-allowed rounded-lg bg-neutral-200 py-3 font-medium text-neutral-500"
-              >
-                Sold out
-              </button>
-            ) : (
-              <button className="w-full rounded-lg bg-neutral-900 py-3 font-medium text-white transition hover:bg-neutral-700">
-                Add to cart
-              </button>
-            )}
+            <AddToCartButton productId={product.id} disabled={soldOut} />
 
             {lowStock && (
               <p className="mt-3 text-sm text-orange-600">
