@@ -40,3 +40,47 @@ export async function getFeaturedProducts(limit = 8) {
     include: { category: true },
   });
 }
+
+
+export type ProductFilters = {
+  category?: string;
+  q?: string;
+  sort?: string;
+  minPrice?: number;
+  maxPrice?: number;
+};
+
+export async function getFilteredProducts(filters: ProductFilters) {
+  const { category, q, sort, minPrice, maxPrice } = filters;
+
+  return prisma.product.findMany({
+    where: {
+      active: true,
+      ...(category && { category: { slug: category } }),
+      ...(q && {
+        name: { contains: q, mode: "insensitive" },
+      }),
+      ...((minPrice || maxPrice) && {
+        price: {
+          ...(minPrice && { gte: minPrice }),
+          ...(maxPrice && { lte: maxPrice }),
+        },
+      }),
+    },
+    orderBy: getOrderBy(sort),
+    include: { category: true },
+  });
+}
+
+function getOrderBy(sort?: string) {
+  switch (sort) {
+    case "price-asc":
+      return { price: "asc" as const };
+    case "price-desc":
+      return { price: "desc" as const };
+    case "name":
+      return { name: "asc" as const };
+    default:
+      return { createdAt: "desc" as const };
+  }
+}
