@@ -24,6 +24,18 @@ export default async function Header() {
             </Link>
           )}
 
+
+          {session && (
+          <>
+            <Link href="/account/orders" className="hover:text-neutral-600">
+              Orders
+            </Link>
+            <Link href="/account/favorites" className="hover:text-neutral-600">
+              Favorites
+            </Link>
+          </>
+          )}  
+
           <CartLink />
 
           {session ? (

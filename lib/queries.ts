@@ -95,3 +95,62 @@ export async function getProductsByIds(ids: number[]) {
     },
   });
 }
+
+export async function getUserOrders(userId: number) {
+  return prisma.order.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      items: {
+        include: { product: true },
+      },
+    },
+  });
+}
+
+export async function getOrderById(id: string, userId: number) {
+  return prisma.order.findFirst({
+    where: { id, userId },
+    include: {
+      items: {
+        include: { product: true },
+      },
+    },
+  });
+}
+
+export async function getUserFavorites(userId: number) {
+  return prisma.favorite.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: { product: true },
+  });
+}
+
+export async function getProductReviews(productId: number) {
+  return prisma.review.findMany({
+    where: { productId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { name: true } },
+    },
+  });
+}
+
+export async function hasPurchased(userId: number, productId: number) {
+  const order = await prisma.order.findFirst({
+    where: {
+      userId,
+      status: { in: ["PAID", "SHIPPED", "DELIVERED"] },
+      items: { some: { productId } },
+    },
+  });
+
+  return order !== null;
+}
+
+export async function getUserReview(userId: number, productId: number) {
+  return prisma.review.findUnique({
+    where: { userId_productId: { userId, productId } },
+  });
+}

@@ -1,11 +1,19 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getProductBySlug } from "../../../lib/queries";
+import {
+  getProductBySlug,
+  getProductReviews,
+  hasPurchased,
+  getUserReview,
+} from "../../../lib/queries";
 import { formatPrice } from "../../../lib/format";
+import { auth } from "../../../auth";
+import { isFavorited } from "../../actions/favorites";
 import AddToCartButton from "../../components/AddToCartButton";
-
-export const revalidate = 3600;
+import FavoriteButton from "../../components/FavoriteButton";
+import ReviewList from "../../components/ReviewList";
+import ReviewForm from "../../components/ReviewForm";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -37,6 +45,14 @@ export default async function ProductPage({ params }: Props) {
   if (!product || !product.active) {
     notFound();
   }
+
+  const session = await auth();
+  const userId = session ? Number(session.user.id) : null;
+
+  const favorited = await isFavorited(product.id);
+  const reviews = await getProductReviews(product.id);
+  const canReview = userId ? await hasPurchased(userId, product.id) : false;
+  const existingReview = userId ? await getUserReview(userId, product.id) : null;
 
   const soldOut = product.stock === 0;
   const lowStock = product.stock > 0 && product.stock <= 5;
@@ -90,6 +106,12 @@ export default async function ProductPage({ params }: Props) {
           <div className="mt-8">
             <AddToCartButton productId={product.id} disabled={soldOut} />
 
+            <FavoriteButton
+              productId={product.id}
+              initialFavorited={favorited}
+              isSignedIn={!!session}
+            />
+
             {lowStock && (
               <p className="mt-3 text-sm text-orange-600">
                 Only {product.stock} left in stock
@@ -98,6 +120,19 @@ export default async function ProductPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      <section className="mt-16 border-t border-neutral-200 pt-12">
+        <h2 className="mb-8 text-xl font-semibold">Reviews</h2>
+
+        <ReviewList reviews={reviews} />
+
+        {canReview && !existingReview && (
+          <div className="mt-10 border-t border-neutral-200 pt-8">
+            <h3 className="mb-4 font-medium">Write a review</h3>
+            <ReviewForm productId={product.id} />
+          </div>
+        )}
+      </section>
     </div>
   );
 }
